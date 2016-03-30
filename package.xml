@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <name>drone_process</name>
+  <version>0.0.0</version>
+  <description>The drone_process package</description>
+
+  <maintainer email="e.ortizp@alumnos.upm.es">Enrique Ortiz</maintainer>
+
+  <license>Copyright 2015 UPM. All right reserved. Released under license BSD-3.</license>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>droneMsgsROS</build_depend>
+  <build_depend>basics</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>droneMsgsROS</run_depend>
+  <run_depend>basics</run_depend>
+
+</package>
