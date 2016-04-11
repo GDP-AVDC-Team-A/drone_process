@@ -3,8 +3,8 @@
  *  \brief      DroneProcess definition file.
  *  \details    This file contains the DroneProcess declaration. To obtain more information about
  *              it's definition consult the drone_process.cpp file.
- *  \author     Enrique Ortiz
- *  \copyright  Copyright 2015 UPM. All right reserved. Released under license BSD-3.
+ *  \authors    Enrique Ortiz, Yolanda de la Hoz, Martin Molina
+ *  \copyright  Copyright 2016 UPM. All right reserved. Released under license BSD-3.
  *********************************************************************************************************************/
 
 #ifndef DRONE_PROCESS
@@ -19,12 +19,6 @@
 #include <std_msgs/String.h>
 #include <droneMsgsROS/AliveSignal.h>
 #include <droneMsgsROS/ProcessError.h>
-
-/*!******************************************************************************************************************
- * \brief This function has the only purpose to serve as the thread execution point.
- * \param [in] argument Function which has to be exacuted by the thread.
- *******************************************************************************************************************/
-//void * threadRun(void * argument);
 
 /*!********************************************************************************************************************
  *  \class      DroneProcess
@@ -45,20 +39,19 @@ class DroneProcess
 public:
   /*!******************************************************************************************************************
    *  \brief     This enum defines all posible DroneProcess states that can be sent to the PerformanceMonitor.
-   *  \details   FirstValue and LastValue are no meaning states, they are used only to improve the functionality 
+   *  \details   The states Started and NotStarted are here to maintain consistency with the class DroneModule.
+   *             The states FirstValue and LastValue have no meaning, they are used to facilitate the implementation.  
    *******************************************************************************************************************/
   typedef enum
   {
     FirstValue,
-    Initializing,
+    Opening,
     Running,
     Sleeping,
-    Waiting,
     Closing,
     Recovering,
     Started,
     NotStarted,
-    Opening,
     LastValue
   } State;
 
@@ -75,20 +68,19 @@ public:
   DroneProcess(int argc, char **argv);
       
   /*!******************************************************************************************************************
-   * The PerformanceMonitor get's a "Stopping" state notification
-   * at object's destruction.
+   * The PerformanceMonitor get's a "Stopping" state notification at object's destruction.
    *******************************************************************************************************************/
   ~DroneProcess();
     
-  //!  This function first calls to commonInitialize() and then to ownInitialize().
+  //!  This function calls to ownInitialize().
   void open();
 
-  //!  This function first calls to commonRun() and then to ownRun().
+  //!  This function calls to ownRun().
   void start();
 
   void stop();
 
-  //!  This function first calls to commonRecover() (That currently does anything) and then to ownRecover().
+  //!  This function calls to ownRecover().
   void recover();
 
    /*!*****************************************************************************************************************
@@ -118,30 +110,27 @@ public:
    *******************************************************************************************************************/
   void notifyError(Error type, int reference_code, std::string location, std::string description);
 
-
   /*!******************************************************************************************************************
-   * \brief The stateToString method is responsible of transforming the recieved state
-   *  into a human readable String.
-   * \param [in] state The recieved state that need to be transformed.
+   * \brief The stateToString method transforms the recieved state into a human readable String.
+   * \param [in] state The received state that need to be transformed.
    * \return the state in a String form.
    *******************************************************************************************************************/
   std::string stateToString(State state);
 
-
 private:
 
-  //!  Private function used to send an alive message to the PerformanceMonitor indicating the current node state.
+  //!  This function sends an alive message to the PerformanceMonitor indicating the current node state.
   void notifyState();
 
   /*!******************************************************************************************************************
-   * \brief Private function used to send an alive message to the PerformanceMonitor indicating the current node state.
+   * \brief This function sends an alive message to the PerformanceMonitor indicating the current node state.
    * \param [in] state State that has to be sent to the PerformanceMonitor.
    *******************************************************************************************************************/
   void notifyState(State state);
 
   /*!******************************************************************************************************************
-   * \brief This function has the only purpose to serve as the thread execution point.
-   * \param [in] argument Function which has to be exacuted by the thread.
+   * \brief This function has the purpose to serve as the thread execution point.
+   * \param [in] argument Function which has to be executed by the thread.
    *******************************************************************************************************************/
   static void * threadRun(void * argument);
 
@@ -152,19 +141,41 @@ private:
 
   //! ROS service handler used to order a process to try to recover from some fault.
   ros::ServiceServer recoverServerSrv;
+  
+  //! ROS service handler used to order a process to start.
   ros::ServiceServer startServerSrv;
+  
+  //! ROS service handler used to order a process to stop.
   ros::ServiceServer stopServerSrv;
 
   /*!******************************************************************************************************************
-   * \brief This ROS service has the only purpose to set DroneProcess in recovering state. 
-   *        THIS FUNCTION HAS TO BE REVIEWED 
+   * \brief This ROS service set DroneProcess in recovering state.
+   *
+   *        TODO: THIS FUNCTION HAS TO BE REVIEWED 
+   *
    * \param [in] request 
    * \param [in] response 
    *******************************************************************************************************************/ 
   bool recoverServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-
+  
+  /*!******************************************************************************************************************
+   * \brief This ROS service set DroneProcess in running state.
+   *
+   *        TODO: THIS FUNCTION HAS TO BE REVIEWED 
+   *
+   * \param [in] request 
+   * \param [in] response 
+   *******************************************************************************************************************/ 
   bool stopServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-
+  
+  /*!******************************************************************************************************************
+   * \brief This ROS service set DroneProcess in sleeping state.
+   *
+   *        TODO: THIS FUNCTION HAS TO BE REVIEWED 
+   *
+   * \param [in] request 
+   * \param [in] response 
+   *******************************************************************************************************************/ 
   bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
   ros::Publisher state_pub;            //!< ROS publisher handler used to send state messages.
@@ -198,7 +209,6 @@ protected:
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
   virtual void ownRecover()= 0;
-
 
 };
 #endif
