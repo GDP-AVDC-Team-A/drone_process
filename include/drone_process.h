@@ -210,5 +210,19 @@ protected:
    *******************************************************************************************************************/
   virtual void ownRecover()= 0;
 
+  /*!******************************************************************************************************************
+   * \details All functions starting with 'own' has to be implemented at the derived class.
+   * This function is executed after commonStart(), and it's purpose is to set up all the parameters.
+   * the developer considers necesary when needed.
+   *******************************************************************************************************************/
+  //virtual void ownStart()= 0;
+
+  /*!******************************************************************************************************************
+   * \details All functions starting with 'own' has to be implemented at the derived class.
+   * This function is executed after commonStop()
+   * the developer considers necesary when needed.
+   *******************************************************************************************************************/
+  //virtual void ownStop()=0;
+
 };
 #endif

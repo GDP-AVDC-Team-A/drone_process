@@ -40,7 +40,7 @@ void DroneProcess::open()
 void DroneProcess::start()
 {
   setState(Running);
-  ownRun();
+  //ownStart();
 }
 
 void DroneProcess::recover()
@@ -52,7 +52,7 @@ void DroneProcess::recover()
 void DroneProcess::stop()
 {
   setState(Sleeping);
-  ros::spinOnce();
+  //ownStop();
 }
 
 std::string DroneProcess::stateToString(State state)
