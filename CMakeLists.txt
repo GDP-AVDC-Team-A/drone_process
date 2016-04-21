@@ -29,9 +29,14 @@ include_directories(
 include_directories(
   include
   src
+  test
 )
 
 ## Declare a cpp library
 add_library(drone_process src/drone_process.cpp include/drone_process.h)
 add_dependencies(drone_process ${catkin_EXPORTED_TARGETS})
 target_link_libraries(drone_process ${catkin_LIBRARIES})
+
+add_executable(mainA test/claseA.cpp)
+target_link_libraries(mainA drone_process)
+target_link_libraries(mainA ${catkin_LIBRARIES})

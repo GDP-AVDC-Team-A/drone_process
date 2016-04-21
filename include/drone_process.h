@@ -3,7 +3,7 @@
  *  \brief      DroneProcess definition file.
  *  \details    This file contains the DroneProcess declaration. To obtain more information about
  *              it's definition consult the drone_process.cpp file.
- *  \authors    Enrique Ortiz, Yolanda de la Hoz, Martin Molina
+ *  \authors    Enrique Ortiz, Yolanda de la Hoz, Martin Molina, David Palacios
  *  \copyright  Copyright 2016 UPM. All right reserved. Released under license BSD-3.
  *********************************************************************************************************************/
 
@@ -12,7 +12,6 @@
 
 #include <string>
 #include <stdio.h>
-#include <stdexcept>
 #include <pthread.h>
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
@@ -35,9 +34,9 @@
  *********************************************************************************************************************/
 class DroneProcess
 {
-  
+//variables
 public:
-  /*!******************************************************************************************************************
+    /*!******************************************************************************************************************
    *  \brief     This enum defines all posible DroneProcess states that can be sent to the PerformanceMonitor.
    *  \details   The states Started and NotStarted are here to maintain consistency with the class DroneModule.
    *             The states FirstValue and LastValue have no meaning, they are used to facilitate the implementation.  
@@ -64,8 +63,34 @@ public:
     SafeguardFatalError,
   } Error;
 
+private:
+  pthread_t t1; //!< Thread handler.
+
+  ros::CallbackQueue string_queue;//TODO
+
+  ros::NodeHandle node_handler_drone_process;
+
+  std::string watchdog_topic;       //!< Attribute storing topic name to send alive messages to the PerformanceMonitor.
+  std::string error_topic;          //!< Attribute storing topic name to send errors to the PerformanceMonitor.
+
+  ros::ServiceServer recoverServerSrv;  //!< ROS service handler used to order a process to try to recover from some fault.
+  ros::ServiceServer startServerSrv;  //!< ROS service handler used to order a process to start.
+  ros::ServiceServer stopServerSrv;  //!< ROS service handler used to order a process to stop.
+
+  ros::Publisher state_pub;            //!< ROS publisher handler used to send state messages.
+  ros::Publisher error_pub;            //!< ROS publisher handler used to send error messages.
+
+  droneMsgsROS::AliveSignal state_message; //!< Message of type state.
+
+protected:
+  State current_state;               //!< Attribute storing current state of the process.
+  std::string drone_id;              //!< Attribute storing the drone on which is executing the process.
+  std::string hostname;              //!< Attribute storing the compouter on which the process is executing.
+
+//methods
+public:
   //! Constructor. \details It needs the same arguments as the ros::init function.
-  DroneProcess(int argc, char **argv);
+  DroneProcess();
       
   /*!******************************************************************************************************************
    * The PerformanceMonitor get's a "Stopping" state notification at object's destruction.
@@ -137,17 +162,6 @@ private:
   //!  This function implements the thread's logic.
   void threadAlgorithm();
 
-  pthread_t t1; //!< Thread handler.
-
-  //! ROS service handler used to order a process to try to recover from some fault.
-  ros::ServiceServer recoverServerSrv;
-  
-  //! ROS service handler used to order a process to start.
-  ros::ServiceServer startServerSrv;
-  
-  //! ROS service handler used to order a process to stop.
-  ros::ServiceServer stopServerSrv;
-
   /*!******************************************************************************************************************
    * \brief This ROS service set DroneProcess in recovering state.
    *
@@ -178,19 +192,7 @@ private:
    *******************************************************************************************************************/ 
   bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-  ros::Publisher state_pub;            //!< ROS publisher handler used to send state messages.
-  ros::Publisher error_pub;            //!< ROS publisher handler used to send error messages.
-
-  droneMsgsROS::AliveSignal state_message; //!< Message of type state.
-  
-  std::string watchdog_topic;       //!< Attribute storing topic name to send alive messages to the PerformanceMonitor.
-  std::string error_topic;          //!< Attribute storing topic name to send errors to the PerformanceMonitor.
-
 protected:
-  State current_state;               //!< Attribute storing current state of the process.
-  std::string drone_id;              //!< Attribute storing the drone on which is executing the process.
-  std::string hostname;              //!< Attribute storing the compouter on which the process is executing.
-
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
    * This function is executed after commonInitialize() and should set up everything that the node needs to execute.

@@ -2,19 +2,18 @@
  *  \file       drone_process.cpp
  *  \brief      DroneProcess implementation file.
  *  \details    This file implements the DroneProcess class. 
- *  \author     Enrique Ortiz
+ *  \authors    Enrique Ortiz, Yolanda de la Hoz, Martin Molina, David Palacios
  *  \copyright  Copyright 2015 UPM. All right reserved. Released under license BSD-3.
  ********************************************************************************************/
 #include "drone_process.h"
 
-DroneProcess::DroneProcess(int argc, char **argv)
+DroneProcess::DroneProcess()
 {
   watchdog_topic = "process_alive_signal";
   error_topic = "process_error";
   char buf[32];  
   gethostname(buf,sizeof buf);  
   hostname.append(buf);
-  ros::init(argc, argv, ros::this_node::getName());
 }
 
 DroneProcess::~DroneProcess()
@@ -27,12 +26,21 @@ DroneProcess::~DroneProcess()
 void DroneProcess::open()
 {
   current_state = Opening;
-  ros::NodeHandle n;
-  state_pub = n.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
-  error_pub = n.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
-  recoverServerSrv=n.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
-  stopServerSrv=n.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
-  startServerSrv=n.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
+
+  state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
+  error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
+  
+
+  ros::AdvertiseServiceOptions ops = ros::AdvertiseServiceOptions::create<std_msgs::String>(ros::this_node::getName()+"/start", &DroneProcess::startServCall, ros::VoidPtr(), &string_queue);
+  // subscribe
+  ros::Subscriber sub2 = n.subscribe(ops);
+
+  //MULTIPLES NODEHANDLERS O SOLO UNO
+
+  recoverServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
+  stopServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
+  startServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
+  
   pthread_create( &t1, NULL, &DroneProcess::threadRun,this);
   ownOpen();
 }
@@ -140,6 +148,8 @@ void DroneProcess::threadAlgorithm()
   ros::Rate r(1);
   while(ros::ok())
   {
+    ros::spinOnce();
+    std::cout << "bucle1" << std::endl;
     notifyState();
     r.sleep();
   }
