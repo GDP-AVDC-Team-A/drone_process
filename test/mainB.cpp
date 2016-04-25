@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     std::cout << "pub" << std::endl;
     std_msgs::Empty msg;
     pub.publish(msg);
-    if(serv.waitForExistence(ros::Duration(2)))
+    if(serv.exists())
     {
       std::cout << "serv" << std::endl;
       std_srvs::Empty srv;

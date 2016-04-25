@@ -69,11 +69,10 @@ public:
   } Error;
 
 private:
-  bool next;
   
   pthread_t t1; //!< Thread handler.
 
-  ros::CallbackQueue stopped_queue;//TODO
+  ros::CallbackQueue supervision_queue;//TODO
 
   ros::NodeHandle node_handler_drone_process;
   ros::NodeHandle node_handler_stopped;
@@ -201,11 +200,6 @@ private:
    *******************************************************************************************************************/ 
   bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-  bool startEmptyServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  bool stopEmptyServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  bool recoverEmptyServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-
-
 protected:
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
@@ -240,7 +234,5 @@ protected:
    *******************************************************************************************************************/
   //virtual void ownStop()=0;
 
-  //TODO
-  void spin();
 };
 #endif

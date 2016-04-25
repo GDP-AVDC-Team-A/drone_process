@@ -38,10 +38,9 @@ protected:
     ros::ServiceServer reader=n.advertiseService("reader",&claseA::readerCall,this);
     ros::Rate r(10);
     std::cout << "1" << std::endl;
-    while(true)
-    {
-      DroneProcess::spin();
-    }
+
+    ros::spin();
+    
     std::cout << "2" << std::endl;
     //while(ros::ok())
     //{

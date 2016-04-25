@@ -14,7 +14,7 @@ DroneProcess::DroneProcess()
   char buf[32];  
   gethostname(buf,sizeof buf);  
   hostname.append(buf);
-  node_handler_stopped.setCallbackQueue(&stopped_queue);//We assign the special queue to this node
+  node_handler_stopped.setCallbackQueue(&supervision_queue);//We assign the special queue to this node
 }
 
 DroneProcess::~DroneProcess()
@@ -31,29 +31,21 @@ void DroneProcess::open()
   state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
   error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
   
-
-  //ros::AdvertiseServiceOptions ops = ros::AdvertiseServiceOptions::create<std_msgs::String>(ros::this_node::getName()+"/start", &DroneProcess::startServCall, ros::VoidPtr(), &string_queue);
-  // subscribe
-  //ros::Subscriber sub2 = n.subscribe(ops);
-
-  //MULTIPLES NODEHANDLERS O SOLO UNO
-  //No deberian ser accesibles desde la cola global
   recoverServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
-  stopServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
+  stopServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
   startServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
 
-  ros::AsyncSpinner async_spinner(1,&stopped_queue); // Use 1 threads
-  async_spinner.start();
-  next=true;
+  ros::AsyncSpinner local_spinner(1,&supervision_queue); // Uses 1 threads
+  local_spinner.start();
+  
   pthread_create( &t1, NULL, &DroneProcess::threadRun,this);
   ownOpen();
 }
 
 void DroneProcess::start()
 {
-  next=true;
   setState(Running);
-  //ros::getGlobalCallbackQueue()->enable();
+  ros::getGlobalCallbackQueue()->enable();
   //ownStart();
 }
 
@@ -65,18 +57,10 @@ void DroneProcess::recover()
 
 void DroneProcess::stop()
 {
-  next=false;
   setState(Sleeping);
-  //ros::g_ok=false;
-  //boost::this_thread::sleep_for(boost::chrono::seconds{10});
-  //std::cout << "despierto" << std::endl;
-
-  //ros::getGlobalCallbackQueue()->disable();
+  ros::getGlobalCallbackQueue()->clear();
+  ros::getGlobalCallbackQueue()->disable();
   //ros::getGlobalCallbackQueue()->clear();
-  //node_handler_drone_process.getCallbackQueue()->disable();
-
-  //stopServerSrv.shutdown();
-  //stopServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopEmptyServCall,this);
   //ownStop();
 }
 
@@ -98,7 +82,7 @@ std::string DroneProcess::stateToString(State state)
     std::string result;
 
   if((int)state < LastValue && (int)state > FirstValue)
-   result.assign(statesArray[(int)state]);
+    result.assign(statesArray[(int)state]);
 
   return result;
 }
@@ -165,8 +149,6 @@ void DroneProcess::threadAlgorithm()
   ros::Rate r(1);
   while(ros::ok())
   {
-    //ros::spinOnce();
-    //std::cout << "bucle1" << std::endl;
     notifyState();
     r.sleep();
   }
@@ -191,38 +173,4 @@ bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Em
   std::cout << "start" << std::endl;
   start();
   return true;
-}
-
-bool DroneProcess::recoverEmptyServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
-{
-  std::cout << "Empty recover" << std::endl;
-  recover();
-  return true;
-}
-
-bool DroneProcess::stopEmptyServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
-{
-  std::cout << "Empty stop" << std::endl;
-  stop();
-  return true;
-}
-
-bool DroneProcess::startEmptyServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
-{
-  std::cout << "Empty start" << std::endl;
-  start();
-  return true;
-}
-
-//TODO
-void DroneProcess::spin()
-{
-  //std::cout << "Entrando a spin" << std::endl;
-  //ros::NodeHandle n;
-  //n.ok()
-  while(ros::ok()&&next)
-  {
-    std::cout << "spin" << std::endl;
-    ros::getGlobalCallbackQueue()->callAvailable(ros::WallDuration(0.1f));
-  }
 }
