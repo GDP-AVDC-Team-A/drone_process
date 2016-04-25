@@ -40,3 +40,7 @@ target_link_libraries(drone_process ${catkin_LIBRARIES})
 add_executable(mainA test/claseA.cpp)
 target_link_libraries(mainA drone_process)
 target_link_libraries(mainA ${catkin_LIBRARIES})
+
+add_executable(mainB test/mainB.cpp)
+target_link_libraries(mainB drone_process)
+target_link_libraries(mainB ${catkin_LIBRARIES})

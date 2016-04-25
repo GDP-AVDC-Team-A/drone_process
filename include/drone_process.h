@@ -14,10 +14,15 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <ros/ros.h>
+#include <ros/callback_queue.h>
 #include <std_srvs/Empty.h>
 #include <std_msgs/String.h>
 #include <droneMsgsROS/AliveSignal.h>
 #include <droneMsgsROS/ProcessError.h>
+
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+
 
 /*!********************************************************************************************************************
  *  \class      DroneProcess
@@ -64,11 +69,15 @@ public:
   } Error;
 
 private:
+  bool next;
+  
   pthread_t t1; //!< Thread handler.
 
-  ros::CallbackQueue string_queue;//TODO
+  ros::CallbackQueue stopped_queue;//TODO
 
   ros::NodeHandle node_handler_drone_process;
+  ros::NodeHandle node_handler_stopped;
+
 
   std::string watchdog_topic;       //!< Attribute storing topic name to send alive messages to the PerformanceMonitor.
   std::string error_topic;          //!< Attribute storing topic name to send errors to the PerformanceMonitor.
@@ -192,6 +201,11 @@ private:
    *******************************************************************************************************************/ 
   bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
+  bool startEmptyServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  bool stopEmptyServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+  bool recoverEmptyServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
+
 protected:
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
@@ -226,5 +240,7 @@ protected:
    *******************************************************************************************************************/
   //virtual void ownStop()=0;
 
+  //TODO
+  void spin();
 };
 #endif
