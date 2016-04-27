@@ -45,7 +45,13 @@ void DroneProcess::open()
 void DroneProcess::start()
 {
   setState(Running);
+  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
+  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
+  //ros::getGlobalCallbackQueue()->clear();
   ros::getGlobalCallbackQueue()->enable();
+  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
+  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
+  //ros::getGlobalCallbackQueue()->clear();
   //ownStart();
 }
 
@@ -58,8 +64,12 @@ void DroneProcess::recover()
 void DroneProcess::stop()
 {
   setState(Sleeping);
-  ros::getGlobalCallbackQueue()->clear();
+  //ros::getGlobalCallbackQueue()->clear();
+  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
+  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
   ros::getGlobalCallbackQueue()->disable();
+  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
+  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
   //ros::getGlobalCallbackQueue()->clear();
   //ownStop();
 }

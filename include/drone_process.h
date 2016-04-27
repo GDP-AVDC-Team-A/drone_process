@@ -22,7 +22,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
-
+#include <boost/ref.hpp>
 
 /*!********************************************************************************************************************
  *  \class      DroneProcess
@@ -150,6 +150,8 @@ public:
    *******************************************************************************************************************/
   std::string stateToString(State state);
 
+
+
 private:
 
   //!  This function sends an alive message to the PerformanceMonitor indicating the current node state.
@@ -235,4 +237,28 @@ protected:
   //virtual void ownStop()=0;
 
 };
+
+
+template<class Service> 
+void serviceThreadRun(ros::ServiceClient &client, Service& service)
+{
+  try
+  {
+    client.call(service);
+  } catch (boost::thread_interrupted e){}
+}
+
+
+//timeout are milliseconds, 1/1000th second
+template<class Service> 
+bool safeServiceCall(ros::ServiceClient &client, Service& service, int timeout)
+{
+  boost::thread service_thread;
+  service_thread = boost::thread(&serviceThreadRun<Service>, boost::ref(client), boost::ref(service));
+  bool res = service_thread.try_join_for(boost::chrono::milliseconds{timeout});
+  if(!res)
+    service_thread.interrupt();
+  //pthread_kill(service_thread.native_handle(), 9);
+  return res;
+}
 #endif

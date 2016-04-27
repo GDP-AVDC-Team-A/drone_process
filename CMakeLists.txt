@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(drone_process)
+add_definitions(-std=c++11)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -36,6 +37,7 @@ include_directories(
 add_library(drone_process src/drone_process.cpp include/drone_process.h)
 add_dependencies(drone_process ${catkin_EXPORTED_TARGETS})
 target_link_libraries(drone_process ${catkin_LIBRARIES})
+TARGET_LINK_LIBRARIES(drone_process ${STATIC_LIBS} -lboost_system -lboost_chrono -lboost_thread)
 
 add_executable(mainA test/claseA.cpp)
 target_link_libraries(mainA drone_process)
