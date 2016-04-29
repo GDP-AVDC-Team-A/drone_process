@@ -69,6 +69,12 @@ public:
   } Error;
 
 private:
+
+  //TODO
+  bool finished, started;
+
+  boost::condition_variable cond;
+  boost::mutex mut;
   
   pthread_t t1; //!< Thread handler.
 
@@ -95,6 +101,7 @@ protected:
   std::string drone_id;              //!< Attribute storing the drone on which is executing the process.
   std::string hostname;              //!< Attribute storing the compouter on which the process is executing.
 
+  ros::NodeHandle n;                 //!< Global node handler, use this one normally. It is not necesary to define in the child class
 //methods
 public:
   //! Constructor. \details It needs the same arguments as the ros::init function.
@@ -113,8 +120,13 @@ public:
 
   void stop();
 
+  //TODO
+  void run();
+
   //!  This function calls to ownRecover().
   void recover();
+
+  void syncRun();
 
    /*!*****************************************************************************************************************
    * \details If the node has an already defined state (Waiting, Running...) returns
@@ -202,6 +214,9 @@ private:
    *******************************************************************************************************************/ 
   bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
+  //TODO
+  void setServCall();
+
 protected:
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
@@ -227,7 +242,7 @@ protected:
    * This function is executed after commonStart(), and it's purpose is to set up all the parameters.
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
-  //virtual void ownStart()= 0;
+  virtual void ownStart()=0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
@@ -235,6 +250,8 @@ protected:
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
   //virtual void ownStop()=0;
+
+  virtual void ownSyncRun()=0;
 
 };
 

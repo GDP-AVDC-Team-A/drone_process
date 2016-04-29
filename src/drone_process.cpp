@@ -14,7 +14,10 @@ DroneProcess::DroneProcess()
   char buf[32];  
   gethostname(buf,sizeof buf);  
   hostname.append(buf);
-  node_handler_stopped.setCallbackQueue(&supervision_queue);//We assign the special queue to this node
+  //node_handler_stopped.setCallbackQueue(&supervision_queue);//We assign the special queue to this node
+
+  //finished=false;
+  started=true;
 }
 
 DroneProcess::~DroneProcess()
@@ -28,6 +31,7 @@ void DroneProcess::open()
 {
   current_state = Opening;
 
+  //TODO see if shutdown closes this
   state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
   error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
   
@@ -35,24 +39,65 @@ void DroneProcess::open()
   stopServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
   startServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
 
-  ros::AsyncSpinner local_spinner(1,&supervision_queue); // Uses 1 threads
-  local_spinner.start();
+  //std::cout << "creo spinner" << std::endl;
+  //ros::AsyncSpinner local_spinner(1,&supervision_queue); // Uses 1 threads
+  //local_spinner.start();
   
   pthread_create( &t1, NULL, &DroneProcess::threadRun,this);
   ownOpen();
+
+  //TODO, move other place
+  //TODO add another lock for finished
+  /*
+  while(!finished)//TODO check state
+  {
+    boost::mutex::scoped_lock lock(mut);
+    while(!started)
+    {
+      std::cout << "entro a esperar" << std::endl;
+      cond.wait(lock);
+      std::cout << "salgo de esperar" << std::endl;
+    }
+    lock.unlock();
+    //Add if started or if paused
+    ownRun();
+  }*/
 }
+
+void DroneProcess::run()
+{
+  setState(Running);
+  ownStart();
+  ownRun();
+}
+
 
 void DroneProcess::start()
 {
+  //boost::mutex::scoped_lock lock(mut);
+  //ros::NodeHandle ntemp;
+  //std::cout << (ntemp.ok()?"true":"false") << std::endl;
+  //std::cout << (n.ok()?"true":"false") << std::endl;
+  //(&n)=(&ntemp);
+  //n.~NodeHandle();
+  //n = ros::NodeHandle();
+  //n(ntemp);
+  //n=ntemp;
+  //delete &n;
+  //ros::NodeHandle n;
+  n::NodeHandle();
+  //std::cout << (n.ok()?"true":"false") << std::endl;
+  //n=ntemp;
   setState(Running);
-  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
-  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
+  /*started=true;
+  lock.unlock();
+  cond.notify_one();*/
   //ros::getGlobalCallbackQueue()->clear();
-  ros::getGlobalCallbackQueue()->enable();
-  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
-  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
-  //ros::getGlobalCallbackQueue()->clear();
-  //ownStart();
+  //ros::getGlobalCallbackQueue()->enable();
+  //std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
+  //std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
+  //TODO, llamadas a ownStart solo cuando hemos parado
+  ownStart();
 }
 
 void DroneProcess::recover()
@@ -64,13 +109,12 @@ void DroneProcess::recover()
 void DroneProcess::stop()
 {
   setState(Sleeping);
-  //ros::getGlobalCallbackQueue()->clear();
-  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
-  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
-  ros::getGlobalCallbackQueue()->disable();
-  std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
-  std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
-  //ros::getGlobalCallbackQueue()->clear();
+  //boost::mutex::scoped_lock lock(mut);
+  //started=false;
+  n.shutdown();
+  //setServCall();
+  //lock.unlock();
+  //ros::getGlobalCallbackQueue()->disable();
   //ownStop();
 }
 
@@ -183,4 +227,17 @@ bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Em
   std::cout << "start" << std::endl;
   start();
   return true;
+}
+
+void DroneProcess::setServCall()
+{
+  recoverServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
+  stopServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
+  startServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
+}
+
+void DroneProcess::syncRun()
+{
+  if(/*current_state==Running*/n.ok())
+    ownSyncRun();
 }
