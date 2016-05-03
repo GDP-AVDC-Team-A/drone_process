@@ -3,8 +3,22 @@
  *  \brief      DroneProcess implementation file.
  *  \details    This file implements the DroneProcess class. 
  *  \authors    Enrique Ortiz, Yolanda de la Hoz, Martin Molina, David Palacios
- *  \copyright  Copyright 2015 UPM. All right reserved. Released under license BSD-3.
- ********************************************************************************************/
+ *  \copyright  Copyright 2016 Universidad Politecnica de Madrid (UPM) 
+ *
+ *     This program is free software: you can redistribute it and/or modify 
+ *     it under the terms of the GNU General Public License as published by 
+ *     the Free Software Foundation, either version 3 of the License, or 
+ *     (at your option) any later version. 
+ *   
+ *     This program is distributed in the hope that it will be useful, 
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+ *     GNU General Public License for more details. 
+ *   
+ *     You should have received a copy of the GNU General Public License 
+ *     along with this program. If not, see http://www.gnu.org/licenses/. 
+ ********************************************************************************/
+
 #include "drone_process.h"
 
 DroneProcess::DroneProcess()
@@ -14,92 +28,43 @@ DroneProcess::DroneProcess()
   char buf[32];  
   gethostname(buf,sizeof buf);  
   hostname.append(buf);
-  //node_handler_stopped.setCallbackQueue(&supervision_queue);//We assign the special queue to this node
+  beginning=true;
 
-  //finished=false;
-  started=true;
+  current_state = Created; //This State is not going to be sent. It will we significative if in the future we implement a state check in every function.
 }
 
 DroneProcess::~DroneProcess()
 {
   pthread_cancel(t1);
-  setState(Closing);
-  notifyState(Closing);
 }
 
-void DroneProcess::open()
+void DroneProcess::setUp()
 {
-  current_state = Opening;
-
-  //TODO see if shutdown closes this
+  //TODO check if shutdown closes this
   state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
   error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
   
-  recoverServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
-  stopServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
-  startServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
+  recoverServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
+  stopServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
+  startServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
 
-  //std::cout << "creo spinner" << std::endl;
-  //ros::AsyncSpinner local_spinner(1,&supervision_queue); // Uses 1 threads
-  //local_spinner.start();
-  
   pthread_create( &t1, NULL, &DroneProcess::threadRun,this);
-  ownOpen();
-
-  //TODO, move other place
-  //TODO add another lock for finished
-  /*
-  while(!finished)//TODO check state
-  {
-    boost::mutex::scoped_lock lock(mut);
-    while(!started)
-    {
-      std::cout << "entro a esperar" << std::endl;
-      cond.wait(lock);
-      std::cout << "salgo de esperar" << std::endl;
-    }
-    lock.unlock();
-    //Add if started or if paused
-    ownRun();
-  }*/
+  ownSetUp();
+  setState(ReadyToStart);
 }
-
-void DroneProcess::run()
-{
-  setState(Running);
-  ownStart();
-  ownRun();
-}
-
 
 void DroneProcess::start()
 {
-  //boost::mutex::scoped_lock lock(mut);
-  //ros::NodeHandle ntemp;
-  //std::cout << (ntemp.ok()?"true":"false") << std::endl;
-  //std::cout << (n.ok()?"true":"false") << std::endl;
-  //(&n)=(&ntemp);
-  //n.~NodeHandle();
-  //n = ros::NodeHandle();
-  //n(ntemp);
-  //n=ntemp;
-  //delete &n;
-  //ros::NodeHandle n;
-  n::NodeHandle();
-  //std::cout << (n.ok()?"true":"false") << std::endl;
-  //n=ntemp;
   setState(Running);
-  /*started=true;
-  lock.unlock();
-  cond.notify_one();*/
-  //ros::getGlobalCallbackQueue()->clear();
-  //ros::getGlobalCallbackQueue()->enable();
-  //std::cout << "empty= " << (ros::getGlobalCallbackQueue()->isEmpty()?"true":"false") << std::endl;
-  //std::cout << "enable= " <<(ros::getGlobalCallbackQueue()->isEnabled()?"true":"false") << std::endl;
-  //TODO, llamadas a ownStart solo cuando hemos parado
   ownStart();
+  if(beginning)
+  {
+    beginning=false;
+    ownRun();
+  }
 }
 
+//TODO, see what we will do with this function/state
 void DroneProcess::recover()
 {
   setState(Recovering);
@@ -108,14 +73,8 @@ void DroneProcess::recover()
 
 void DroneProcess::stop()
 {
-  setState(Sleeping);
-  //boost::mutex::scoped_lock lock(mut);
-  //started=false;
+  setState(ReadyToStart);
   n.shutdown();
-  //setServCall();
-  //lock.unlock();
-  //ros::getGlobalCallbackQueue()->disable();
-  //ownStop();
 }
 
 std::string DroneProcess::stateToString(State state)
@@ -123,12 +82,12 @@ std::string DroneProcess::stateToString(State state)
   static const char* statesArray[] =
     { 
       "FirstValue",
-      "Initializing",
+      "Created",
+      "ReadyToStart",
       "Running",
-      "Sleeping",
-      "Waiting",
-      "Stopping",
+      "Paused",
       "Recovering",
+      "UnexpectedState",
       "Started",
       "NotStarted",
       "LastValue",
@@ -208,36 +167,44 @@ void DroneProcess::threadAlgorithm()
   }
 }
 
+
+
+//TODO
+//Comprobar estados al recibir llamadas
 bool DroneProcess::recoverServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  std::cout << "recover" << std::endl;
   recover();
   return true;
 }
 
 bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  std::cout << "stop" << std::endl;
-  stop();
-  return true;
+  ROS_INFO("Start deeeeeeee");
+  //ROS_DEBUG("stopppppppppp");
+  //ROS_WARN("AaaaaaaaaaAAAAAAAAAAAAAA");
+  //ROS_ERROR("ERORRRrrrrrrrrrrrrrrrrrrr");
+  //ROS_FATAL("fhdjklfhldjkhfldfjldbgfjkdgfjk");
+  //ROS_INFO_NAMED("Start","mensajeeeeejikjkjiefsfssfsdsfsdsd");
+  ROS_INFO_COND(current_state==Running,"Paramos");
+  if(current_state==Running)
+  {
+    stop();
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  std::cout << "start" << std::endl;
   start();
   return true;
 }
 
-void DroneProcess::setServCall()
-{
-  recoverServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
-  stopServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
-  startServerSrv=node_handler_stopped.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
-}
-
 void DroneProcess::syncRun()
 {
-  if(/*current_state==Running*/n.ok())
+  if(current_state==Running)
     ownSyncRun();
 }

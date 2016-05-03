@@ -1,11 +1,24 @@
-/*!********************************************************************************************************************
+/*!*********************************************************************************
  *  \file       drone_process.h
  *  \brief      DroneProcess definition file.
  *  \details    This file contains the DroneProcess declaration. To obtain more information about
  *              it's definition consult the drone_process.cpp file.
  *  \authors    Enrique Ortiz, Yolanda de la Hoz, Martin Molina, David Palacios
- *  \copyright  Copyright 2016 UPM. All right reserved. Released under license BSD-3.
- *********************************************************************************************************************/
+ *  \copyright  Copyright 2016 Universidad Politecnica de Madrid (UPM) 
+ *
+ *     This program is free software: you can redistribute it and/or modify 
+ *     it under the terms of the GNU General Public License as published by 
+ *     the Free Software Foundation, either version 3 of the License, or 
+ *     (at your option) any later version. 
+ *   
+ *     This program is distributed in the hope that it will be useful, 
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+ *     GNU General Public License for more details. 
+ *   
+ *     You should have received a copy of the GNU General Public License 
+ *     along with this program. If not, see http://www.gnu.org/licenses/. 
+ ********************************************************************************/
 
 #ifndef DRONE_PROCESS
 #define DRONE_PROCESS
@@ -49,11 +62,12 @@ public:
   typedef enum
   {
     FirstValue,
-    Opening,
+    Created,
+    ReadyToStart,
     Running,
-    Sleeping,
-    Closing,
+    Paused,
     Recovering,
+    UnexpectedState,
     Started,
     NotStarted,
     LastValue
@@ -71,18 +85,11 @@ public:
 private:
 
   //TODO
-  bool finished, started;
+  bool beginning;
 
-  boost::condition_variable cond;
-  boost::mutex mut;
-  
   pthread_t t1; //!< Thread handler.
 
-  ros::CallbackQueue supervision_queue;//TODO
-
   ros::NodeHandle node_handler_drone_process;
-  ros::NodeHandle node_handler_stopped;
-
 
   std::string watchdog_topic;       //!< Attribute storing topic name to send alive messages to the PerformanceMonitor.
   std::string error_topic;          //!< Attribute storing topic name to send errors to the PerformanceMonitor.
@@ -113,7 +120,7 @@ public:
   ~DroneProcess();
     
   //!  This function calls to ownInitialize().
-  void open();
+  void setUp();
 
   //!  This function calls to ownRun().
   void start();
@@ -214,15 +221,12 @@ private:
    *******************************************************************************************************************/ 
   bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-  //TODO
-  void setServCall();
-
 protected:
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
    * This function is executed after commonInitialize() and should set up everything that the node needs to execute.
    *******************************************************************************************************************/
-  virtual void ownOpen()= 0;
+  virtual void ownSetUp()= 0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
@@ -242,6 +246,7 @@ protected:
    * This function is executed after commonStart(), and it's purpose is to set up all the parameters.
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
+  //TODO importante poner que aqui van las definiciones de publish y demas
   virtual void ownStart()=0;
 
   /*!******************************************************************************************************************
