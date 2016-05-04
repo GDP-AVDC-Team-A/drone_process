@@ -7,7 +7,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   droneMsgsROS
+  std_srvs
 )
+
 
 ###################################
 ## catkin specific configuration ##
@@ -15,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES drone_process
-  CATKIN_DEPENDS roscpp std_msgs droneMsgsROS
+  CATKIN_DEPENDS roscpp std_msgs droneMsgsROS std_srvs
 )
 
 ###########

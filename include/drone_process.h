@@ -31,11 +31,22 @@
 #include <std_srvs/Empty.h>
 #include <std_msgs/String.h>
 #include <droneMsgsROS/AliveSignal.h>
+#include <droneMsgsROS/ProcessState.h>
 #include <droneMsgsROS/ProcessError.h>
 
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <boost/ref.hpp>
+
+#define Created             droneMsgsROS::ProcessState::Created
+#define ReadyToStart        droneMsgsROS::ProcessState::ReadyToStart
+#define Running             droneMsgsROS::ProcessState::Running
+#define Paused              droneMsgsROS::ProcessState::Paused
+#define Recovering          droneMsgsROS::ProcessState::Recovering
+//#define UnexpectedState   droneMsgsROS::ProcessState::UnexpectedState
+#define Started             droneMsgsROS::ProcessState::Started
+#define NotStarted          droneMsgsROS::ProcessState::NotStarted
+
 
 /*!********************************************************************************************************************
  *  \class      DroneProcess
@@ -59,19 +70,7 @@ public:
    *  \details   The states Started and NotStarted are here to maintain consistency with the class DroneModule.
    *             The states FirstValue and LastValue have no meaning, they are used to facilitate the implementation.  
    *******************************************************************************************************************/
-  typedef enum
-  {
-    FirstValue,
-    Created,
-    ReadyToStart,
-    Running,
-    Paused,
-    Recovering,
-    UnexpectedState,
-    Started,
-    NotStarted,
-    LastValue
-  } State;
+  typedef uint8_t State;
 
   //! This enum defines all posible DroneProcess errors that can be sent to the PerformanceMonitor.
   typedef enum
@@ -108,7 +107,6 @@ protected:
   std::string drone_id;              //!< Attribute storing the drone on which is executing the process.
   std::string hostname;              //!< Attribute storing the compouter on which the process is executing.
 
-  ros::NodeHandle n;                 //!< Global node handler, use this one normally. It is not necesary to define in the child class
 //methods
 public:
   //! Constructor. \details It needs the same arguments as the ros::init function.
@@ -254,7 +252,7 @@ protected:
    * This function is executed after commonStop()
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
-  //virtual void ownStop()=0;
+  virtual void ownStop()=0;
 
   virtual void ownSyncRun()=0;
 
@@ -270,7 +268,7 @@ void serviceThreadRun(ros::ServiceClient &client, Service& service)
   } catch (boost::thread_interrupted e){}
 }
 
-
+//TODO, funciona, poner comentarios
 //timeout are milliseconds, 1/1000th second
 template<class Service> 
 bool safeServiceCall(ros::ServiceClient &client, Service& service, int timeout)

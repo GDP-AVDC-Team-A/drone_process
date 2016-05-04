@@ -74,28 +74,43 @@ void DroneProcess::recover()
 void DroneProcess::stop()
 {
   setState(ReadyToStart);
-  n.shutdown();
+  ownStop();
 }
 
 std::string DroneProcess::stateToString(State state)
 {
-  static const char* statesArray[] =
-    { 
-      "FirstValue",
-      "Created",
-      "ReadyToStart",
-      "Running",
-      "Paused",
-      "Recovering",
-      "UnexpectedState",
-      "Started",
-      "NotStarted",
-      "LastValue",
-    };
-    std::string result;
-
-  if((int)state < LastValue && (int)state > FirstValue)
-    result.assign(statesArray[(int)state]);
+  std::string result;
+  switch(state)
+  {
+    case Created:
+      result="Created";
+      break;
+    case ReadyToStart:
+      result="ReadyToStart";
+      break;
+    case Running:
+      result="Running";
+      break;
+    case Paused:
+      result="Paused";
+      break;
+    case Recovering:
+      result="Recovering";
+      break;
+      /*
+    case UnexpectedState:
+      result="UnexpectedState";
+      break;*/
+    case Started:
+      result="Started";
+      break;
+    case NotStarted:
+      result="NotStarted";
+      break;
+    default:
+      ROS_WARN("In node %s, method stateToString received a invalid State. Value received is %d.",ros::this_node::getName().c_str(),state);
+      break;
+  }
 
   return result;
 }
@@ -107,23 +122,33 @@ DroneProcess::State DroneProcess::getState()
 
 void DroneProcess::setState(State new_state)
 {
-  if (new_state > FirstValue && new_state < LastValue)
+  if (new_state==Created || new_state==ReadyToStart || new_state==Running || new_state==Paused \
+        || new_state==Recovering /*|| new_state==UnexpectedState*/ || new_state==Started || new_state==NotStarted)
   {
     current_state = new_state;
     notifyState();
+  }
+  else
+  {
+    ROS_ERROR("In node %s, current state cannot be changed to new state %d",ros::this_node::getName().c_str(),new_state);
   }
 }
 
 void DroneProcess::notifyState()
 {
   State _current_state = getState();
-  if(_current_state > 0)
+  if (_current_state==Created || _current_state==ReadyToStart || _current_state==Running || _current_state==Paused \
+        || _current_state==Recovering /*|| _current_state==UnexpectedState*/ || _current_state==Started || _current_state==NotStarted)
   {
     state_message.header.stamp = ros::Time::now();
     state_message.hostname = hostname;
     state_message.process_name = ros::this_node::getName();
-    state_message.current_state.state = (int)_current_state;
+    state_message.current_state.state = _current_state;
     state_pub.publish(state_message);
+  }
+  else
+  {
+    ROS_ERROR("In node %s, current state is invalid, therefore it is not sent",ros::this_node::getName().c_str());
   }
 }
 
@@ -135,7 +160,6 @@ void DroneProcess::notifyState(State current_state)
   state_message.current_state.state = (int)current_state;
   state_pub.publish(state_message);
 }
-
 
 void DroneProcess::notifyError(Error type, int reference_code, std::string function, std::string description)
 {
@@ -170,7 +194,7 @@ void DroneProcess::threadAlgorithm()
 
 
 //TODO
-//Comprobar estados al recibir llamadas
+//Change state check
 bool DroneProcess::recoverServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
   recover();
@@ -179,13 +203,6 @@ bool DroneProcess::recoverServCall(std_srvs::Empty::Request &request, std_srvs::
 
 bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  ROS_INFO("Start deeeeeeee");
-  //ROS_DEBUG("stopppppppppp");
-  //ROS_WARN("AaaaaaaaaaAAAAAAAAAAAAAA");
-  //ROS_ERROR("ERORRRrrrrrrrrrrrrrrrrrrr");
-  //ROS_FATAL("fhdjklfhldjkhfldfjldbgfjkdgfjk");
-  //ROS_INFO_NAMED("Start","mensajeeeeejikjkjiefsfssfsdsfsdsd");
-  ROS_INFO_COND(current_state==Running,"Paramos");
   if(current_state==Running)
   {
     stop();
@@ -193,14 +210,23 @@ bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Emp
   }
   else
   {
+    ROS_WARN("Node %s received s stop call when it was already stopped",ros::this_node::getName().c_str());
     return false;
   }
 }
 
 bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  start();
-  return true;
+  if(current_state==ReadyToStart)
+  {
+    start();
+    return true;
+  }
+  else
+  {
+    ROS_WARN("Node %s received a start call when it was already running",ros::this_node::getName().c_str());
+    return false;
+  }
 }
 
 void DroneProcess::syncRun()
