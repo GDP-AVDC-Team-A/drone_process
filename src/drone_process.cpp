@@ -30,7 +30,7 @@ DroneProcess::DroneProcess()
   hostname.append(buf);
   beginning=true;
 
-  current_state = Created; //This State is not going to be sent. It will we significative if in the future we implement a state check in every function.
+  current_state = Created; //This State is not going to be sent. It will we significant in the future when we implement state checks.
 }
 
 DroneProcess::~DroneProcess()
@@ -40,7 +40,6 @@ DroneProcess::~DroneProcess()
 
 void DroneProcess::setUp()
 {
-  //TODO check if shutdown closes this
   state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
   error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
   
@@ -64,7 +63,6 @@ void DroneProcess::start()
   }
 }
 
-//TODO, see what we will do with this function/state
 void DroneProcess::recover()
 {
   setState(Recovering);
@@ -191,10 +189,6 @@ void DroneProcess::threadAlgorithm()
   }
 }
 
-
-
-//TODO
-//Change state check
 bool DroneProcess::recoverServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
   recover();
@@ -210,7 +204,7 @@ bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Emp
   }
   else
   {
-    ROS_WARN("Node %s received s stop call when it was already stopped",ros::this_node::getName().c_str());
+    ROS_WARN("Node %s received a stop call when it was already stopped",ros::this_node::getName().c_str());
     return false;
   }
 }

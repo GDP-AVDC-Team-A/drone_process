@@ -65,11 +65,7 @@ class DroneProcess
 {
 //variables
 public:
-    /*!******************************************************************************************************************
-   *  \brief     This enum defines all posible DroneProcess states that can be sent to the PerformanceMonitor.
-   *  \details   The states Started and NotStarted are here to maintain consistency with the class DroneModule.
-   *             The states FirstValue and LastValue have no meaning, they are used to facilitate the implementation.  
-   *******************************************************************************************************************/
+  //! States match the values defined in ProcessState.msg
   typedef uint8_t State;
 
   //! This enum defines all posible DroneProcess errors that can be sent to the PerformanceMonitor.
@@ -83,10 +79,9 @@ public:
 
 private:
 
-  //TODO
-  bool beginning;
+  bool beginning;                   //!< Attribute storing wether the process has started running
 
-  pthread_t t1; //!< Thread handler.
+  pthread_t t1;                     //!< Thread handler.
 
   ros::NodeHandle node_handler_drone_process;
 
@@ -109,28 +104,29 @@ protected:
 
 //methods
 public:
-  //! Constructor. \details It needs the same arguments as the ros::init function.
+  //! Constructor.
   DroneProcess();
       
-  /*!******************************************************************************************************************
-   * The PerformanceMonitor get's a "Stopping" state notification at object's destruction.
-   *******************************************************************************************************************/
   ~DroneProcess();
     
-  //!  This function calls to ownInitialize().
+  //!  This function calls to ownSetUp().
   void setUp();
 
-  //!  This function calls to ownRun().
+  //!  This function calls to ownStart().
+  //!  The first time is called this function calls to ownRun().
   void start();
 
+  //!  This function calls to ownStop().
   void stop();
-
-  //TODO
-  void run();
 
   //!  This function calls to ownRecover().
   void recover();
 
+  /*!*****************************************************************************************************************
+  * \brief This function calls to ownSyncRun() when the process is Running.
+  * \details This function must be called by the user in ownRun when he is implementing a synchronus execution, when using ros::spinOnce().
+  * Don't use this function if using ros::spin().
+  *******************************************************************************************************************/
   void syncRun();
 
    /*!*****************************************************************************************************************
@@ -222,38 +218,43 @@ private:
 protected:
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed after commonInitialize() and should set up everything that the node needs to execute.
+   * This function is executed in setUp() and it's purpose is to set up all the parameters.
+   * the developer considers necesary when needed.
    *******************************************************************************************************************/
   virtual void ownSetUp()= 0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed after commonRun(). It should contain the main loop of the node.
+   * This function is executed only once, after ownStart(). It should contain the main loop of the node.
    *******************************************************************************************************************/
   virtual void ownRun()= 0;
   
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed after commonRecover(), and it's purpose is to recover all the parameters
+   * This function is executed in recover(), and it's purpose is to recover all the parameters
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
   virtual void ownRecover()= 0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed after commonStart(), and it's purpose is to set up all the parameters.
-   * the developer considers necesary when needed.
+   * This function is executed in start(), and it's purpose is to connect to all topics and services. 
+   * Publisher, Subscriber, ServiceServer and ServiceClient definitions should be implemented here. 
    *******************************************************************************************************************/
-  //TODO importante poner que aqui van las definiciones de publish y demas
   virtual void ownStart()=0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed after commonStop()
-   * the developer considers necesary when needed.
+   * This function is executed in stop(), and it's purpose is to shutdown all topics and services.
+   * Shutdown must be called for every Publisher, Subscriber, ServiceServer and ServiceClient defined in ownStart 
    *******************************************************************************************************************/
   virtual void ownStop()=0;
 
+  /*!******************************************************************************************************************
+   * \details All functions starting with 'own' has to be implemented at the derived class.
+   * This function is executed in syncRun(), only if the process is Running.
+   * The user should define this function only when implementing a synchronus execution
+   *******************************************************************************************************************/
   virtual void ownSyncRun()=0;
 
 };
@@ -265,7 +266,7 @@ void serviceThreadRun(ros::ServiceClient &client, Service& service)
   try
   {
     client.call(service);
-  } catch (boost::thread_interrupted e){}
+  } catch (boost::thread_interrupted exception){}
 }
 
 //TODO, funciona, poner comentarios
