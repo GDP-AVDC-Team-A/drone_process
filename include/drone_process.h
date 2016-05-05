@@ -258,28 +258,4 @@ protected:
   virtual void ownSyncRun()=0;
 
 };
-
-
-template<class Service> 
-void serviceThreadRun(ros::ServiceClient &client, Service& service)
-{
-  try
-  {
-    client.call(service);
-  } catch (boost::thread_interrupted exception){}
-}
-
-//TODO, funciona, poner comentarios
-//timeout are milliseconds, 1/1000th second
-template<class Service> 
-bool safeServiceCall(ros::ServiceClient &client, Service& service, int timeout)
-{
-  boost::thread service_thread;
-  service_thread = boost::thread(&serviceThreadRun<Service>, boost::ref(client), boost::ref(service));
-  bool res = service_thread.try_join_for(boost::chrono::milliseconds{timeout});
-  if(!res)
-    service_thread.interrupt();
-  //pthread_kill(service_thread.native_handle(), 9);
-  return res;
-}
 #endif
