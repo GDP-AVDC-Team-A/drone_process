@@ -40,11 +40,3 @@ add_library(drone_process src/drone_process.cpp include/drone_process.h)
 add_dependencies(drone_process ${catkin_EXPORTED_TARGETS})
 target_link_libraries(drone_process ${catkin_LIBRARIES})
 TARGET_LINK_LIBRARIES(drone_process ${STATIC_LIBS} -lboost_system -lboost_chrono -lboost_thread)
-
-add_executable(mainA test/claseA.cpp)
-target_link_libraries(mainA drone_process)
-target_link_libraries(mainA ${catkin_LIBRARIES})
-
-add_executable(mainB test/mainB.cpp)
-target_link_libraries(mainB drone_process)
-target_link_libraries(mainB ${catkin_LIBRARIES})
