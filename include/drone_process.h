@@ -34,10 +34,6 @@
 #include <droneMsgsROS/ProcessState.h>
 #include <droneMsgsROS/ProcessError.h>
 
-#include <boost/thread.hpp>
-#include <boost/chrono.hpp>
-#include <boost/ref.hpp>
-
 #define Created             droneMsgsROS::ProcessState::Created
 #define ReadyToStart        droneMsgsROS::ProcessState::ReadyToStart
 #define Running             droneMsgsROS::ProcessState::Running

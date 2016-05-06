@@ -39,4 +39,3 @@ include_directories(
 add_library(drone_process src/drone_process.cpp include/drone_process.h)
 add_dependencies(drone_process ${catkin_EXPORTED_TARGETS})
 target_link_libraries(drone_process ${catkin_LIBRARIES})
-TARGET_LINK_LIBRARIES(drone_process ${STATIC_LIBS} -lboost_system -lboost_chrono -lboost_thread)
