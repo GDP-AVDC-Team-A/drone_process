@@ -75,8 +75,6 @@ public:
 
 private:
 
-  bool beginning;                   //!< Attribute storing wether the process has started running
-
   pthread_t t1;                     //!< Thread handler.
 
   ros::NodeHandle node_handler_drone_process;
@@ -119,11 +117,11 @@ public:
   void recover();
 
   /*!*****************************************************************************************************************
-  * \brief This function calls to ownSyncRun() when the process is Running.
+  * \brief This function calls to ownRun() when the process is Running.
   * \details This function must be called by the user in ownRun when he is implementing a synchronus execution, when using ros::spinOnce().
   * Don't use this function if using ros::spin().
   *******************************************************************************************************************/
-  void syncRun();
+  void run();
 
    /*!*****************************************************************************************************************
    * \details If the node has an already defined state (Waiting, Running...) returns
@@ -218,12 +216,6 @@ protected:
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
   virtual void ownSetUp()= 0;
-
-  /*!******************************************************************************************************************
-   * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed only once, after ownStart(). It should contain the main loop of the node.
-   *******************************************************************************************************************/
-  virtual void ownRun()= 0;
   
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
@@ -248,10 +240,10 @@ protected:
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed in syncRun(), only if the process is Running.
+   * This function is executed in run(), only if the process is Running.
    * The user should define this function only when implementing a synchronus execution
    *******************************************************************************************************************/
-  virtual void ownSyncRun()=0;
+  virtual void ownRun()=0;
 
 };
 #endif

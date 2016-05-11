@@ -28,7 +28,6 @@ DroneProcess::DroneProcess()
   char buf[32];  
   gethostname(buf,sizeof buf);  
   hostname.append(buf);
-  beginning=true;
 
   current_state = Created; //This State is not going to be sent. It will we significant in the future when we implement state checks.
 }
@@ -56,11 +55,6 @@ void DroneProcess::start()
 {
   setState(Running);
   ownStart();
-  if(beginning)
-  {
-    beginning=false;
-    ownRun();
-  }
 }
 
 void DroneProcess::recover()
@@ -223,8 +217,8 @@ bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Em
   }
 }
 
-void DroneProcess::syncRun()
+void DroneProcess::run()
 {
   if(current_state==Running)
-    ownSyncRun();
+    ownRun();
 }
