@@ -34,14 +34,14 @@
 #include <droneMsgsROS/ProcessState.h>
 #include <droneMsgsROS/ProcessError.h>
 
-#define S_Created             droneMsgsROS::ProcessState::Created
-#define S_ReadyToStart        droneMsgsROS::ProcessState::ReadyToStart
-#define S_Running             droneMsgsROS::ProcessState::Running
-#define S_Paused              droneMsgsROS::ProcessState::Paused
-#define S_Recovering          droneMsgsROS::ProcessState::Recovering
-//#define S_UnexpectedState   droneMsgsROS::ProcessState::UnexpectedState
-#define S_Started             droneMsgsROS::ProcessState::Started
-#define S_NotStarted          droneMsgsROS::ProcessState::NotStarted
+#define STATE_CREATED             droneMsgsROS::ProcessState::Created
+#define STATE_READYTOSTART        droneMsgsROS::ProcessState::ReadyToStart
+#define STATE_RUNNING             droneMsgsROS::ProcessState::Running
+#define STATE_PAUSED              droneMsgsROS::ProcessState::Paused
+
+
+#define STATE_STARTED             droneMsgsROS::ProcessState::Started
+#define STATE_NOTSTARTED          droneMsgsROS::ProcessState::NotStarted
 
 
 /*!********************************************************************************************************************
@@ -82,7 +82,6 @@ private:
   std::string watchdog_topic;       //!< Attribute storing topic name to send alive messages to the PerformanceMonitor.
   std::string error_topic;          //!< Attribute storing topic name to send errors to the PerformanceMonitor.
 
-  ros::ServiceServer recoverServerSrv;  //!< ROS service handler used to order a process to try to recover from some fault.
   ros::ServiceServer startServerSrv;  //!< ROS service handler used to order a process to start.
   ros::ServiceServer stopServerSrv;  //!< ROS service handler used to order a process to stop.
 
@@ -112,9 +111,6 @@ public:
 
   //!  This function calls to ownStop().
   void stop();
-
-  //!  This function calls to ownRecover().
-  void recover();
 
   /*!*****************************************************************************************************************
   * \brief This function calls to ownRun() when the process is Running.
@@ -178,16 +174,6 @@ private:
 
   //!  This function implements the thread's logic.
   void threadAlgorithm();
-
-  /*!******************************************************************************************************************
-   * \brief This ROS service set DroneProcess in recovering state.
-   *
-   *        TODO: THIS FUNCTION HAS TO BE REVIEWED 
-   *
-   * \param [in] request 
-   * \param [in] response 
-   *******************************************************************************************************************/ 
-  bool recoverServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
   
   /*!******************************************************************************************************************
    * \brief This ROS service set DroneProcess in running state.
@@ -216,13 +202,6 @@ protected:
    * the developer considers necesary when needed.
    *******************************************************************************************************************/
   virtual void ownSetUp()= 0;
-  
-  /*!******************************************************************************************************************
-   * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed in recover(), and it's purpose is to recover all the parameters
-   * the developer considers necesary when needed.
-   *******************************************************************************************************************/
-  virtual void ownRecover()= 0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.

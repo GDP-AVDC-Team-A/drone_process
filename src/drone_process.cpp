@@ -29,7 +29,7 @@ DroneProcess::DroneProcess()
   gethostname(buf,sizeof buf);  
   hostname.append(buf);
 
-  current_state = S_Created; //This State is not going to be sent. It will we significant in the future when we implement state checks.
+  current_state = STATE_CREATED; //This State is not going to be sent. It will we significant in the future when we implement state checks.
 }
 
 DroneProcess::~DroneProcess()
@@ -42,32 +42,25 @@ void DroneProcess::setUp()
   state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
   error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
   
-  recoverServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/recover",&DroneProcess::recoverServCall,this);
   stopServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
   startServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
 
-  notifyState(); //First state nNotification, the current state is S_Created
+  notifyState(); //First state nNotification, the current state is STATE_CREATED
 
   pthread_create( &t1, NULL, &DroneProcess::threadRun,this);
   ownSetUp();
-  setState(S_ReadyToStart);
+  setState(STATE_READYTOSTART);
 }
 
 void DroneProcess::start()
 {
-  setState(S_Running);
+  setState(STATE_RUNNING);
   ownStart();
-}
-
-void DroneProcess::recover()
-{
-  setState(S_Recovering);
-  ownRecover();
 }
 
 void DroneProcess::stop()
 {
-  setState(S_ReadyToStart);
+  setState(STATE_READYTOSTART);
   ownStop();
 }
 
@@ -76,29 +69,22 @@ std::string DroneProcess::stateToString(State state)
   std::string result;
   switch(state)
   {
-    case S_Created:
+    case STATE_CREATED:
       result="Created";
       break;
-    case S_ReadyToStart:
+    case STATE_READYTOSTART:
       result="ReadyToStart";
       break;
-    case S_Running:
+    case STATE_RUNNING:
       result="Running";
       break;
-    case S_Paused:
+    case STATE_PAUSED:
       result="Paused";
       break;
-    case S_Recovering:
-      result="Recovering";
-      break;
-      /*
-    case S_UnexpectedState:
-      result="UnexpectedState";
-      break;*/
-    case S_Started:
+    case STATE_STARTED:
       result="Started";
       break;
-    case S_NotStarted:
+    case STATE_NOTSTARTED:
       result="NotStarted";
       break;
     default:
@@ -116,8 +102,8 @@ DroneProcess::State DroneProcess::getState()
 
 void DroneProcess::setState(State new_state)
 {
-  if (new_state==S_Created || new_state==S_ReadyToStart || new_state==S_Running || new_state==S_Paused \
-        || new_state==S_Recovering /*|| new_state==S_UnexpectedState*/ || new_state==S_Started || new_state==S_NotStarted)
+  if (new_state==STATE_CREATED || new_state==STATE_READYTOSTART || new_state==STATE_RUNNING || new_state==STATE_PAUSED \
+        || new_state==STATE_STARTED || new_state==STATE_NOTSTARTED)
   {
     current_state = new_state;
     notifyState();
@@ -131,9 +117,8 @@ void DroneProcess::setState(State new_state)
 void DroneProcess::notifyState()
 {
   State _current_state = getState();
-  ROS_INFO("state: %d",_current_state);
-  if (_current_state==S_Created || _current_state==S_ReadyToStart || _current_state==S_Running || _current_state==S_Paused \
-        || _current_state==S_Recovering /*|| _current_state==S_UnexpectedState*/ || _current_state==S_Started || _current_state==S_NotStarted)
+  if (_current_state==STATE_CREATED || _current_state==STATE_READYTOSTART || _current_state==STATE_RUNNING || _current_state==STATE_PAUSED \
+        || _current_state==STATE_STARTED || _current_state==STATE_NOTSTARTED)
   {
     state_message.header.stamp = ros::Time::now();
     state_message.hostname = hostname;
@@ -186,15 +171,9 @@ void DroneProcess::threadAlgorithm()
   }
 }
 
-bool DroneProcess::recoverServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
-{
-  recover();
-  return true;
-}
-
 bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  if(current_state==S_Running)
+  if(current_state==STATE_RUNNING)
   {
     stop();
     return true;
@@ -208,7 +187,7 @@ bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Emp
 
 bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  if(current_state==S_ReadyToStart)
+  if(current_state==STATE_READYTOSTART)
   {
     start();
     return true;
@@ -222,6 +201,6 @@ bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Em
 
 void DroneProcess::run()
 {
-  if(current_state==S_Running)
+  if(current_state==STATE_RUNNING)
     ownRun();
 }
