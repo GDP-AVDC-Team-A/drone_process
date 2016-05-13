@@ -7,7 +7,7 @@
   <author email="e.ortizp@alumnos.upm.es">Enrique Ortiz</author>
   <maintainer email="davidnpalacios@gmail.com">David Palacios</maintainer>
 
-  <license>Copyright 2016 UPM. All right reserved. Released under license BSD-3.</license>
+  <license>GPLv3</license>
   
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
