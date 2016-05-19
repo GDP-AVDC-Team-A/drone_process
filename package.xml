@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>drone_process</name>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <description>The drone_process package</description>
 
   <author email="e.ortizp@alumnos.upm.es">Enrique Ortiz</author>
