@@ -35,13 +35,13 @@
 #include <droneMsgsROS/ProcessError.h>
 
 #define STATE_CREATED             droneMsgsROS::ProcessState::Created
-#define STATE_READYTOSTART        droneMsgsROS::ProcessState::ReadyToStart
+#define STATE_READY_TO_START      droneMsgsROS::ProcessState::ReadyToStart
 #define STATE_RUNNING             droneMsgsROS::ProcessState::Running
 #define STATE_PAUSED              droneMsgsROS::ProcessState::Paused
 
 
 #define STATE_STARTED             droneMsgsROS::ProcessState::Started
-#define STATE_NOTSTARTED          droneMsgsROS::ProcessState::NotStarted
+#define STATE_NOT_STARTED         droneMsgsROS::ProcessState::NotStarted
 
 
 /*!********************************************************************************************************************

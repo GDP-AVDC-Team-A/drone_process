@@ -49,7 +49,7 @@ void DroneProcess::setUp()
 
   pthread_create( &t1, NULL, &DroneProcess::threadRun,this);
   ownSetUp();
-  setState(STATE_READYTOSTART);
+  setState(STATE_READY_TO_START);
 }
 
 void DroneProcess::start()
@@ -60,7 +60,7 @@ void DroneProcess::start()
 
 void DroneProcess::stop()
 {
-  setState(STATE_READYTOSTART);
+  setState(STATE_READY_TO_START);
   ownStop();
 }
 
@@ -72,7 +72,7 @@ std::string DroneProcess::stateToString(State state)
     case STATE_CREATED:
       result="Created";
       break;
-    case STATE_READYTOSTART:
+    case STATE_READY_TO_START:
       result="ReadyToStart";
       break;
     case STATE_RUNNING:
@@ -84,7 +84,7 @@ std::string DroneProcess::stateToString(State state)
     case STATE_STARTED:
       result="Started";
       break;
-    case STATE_NOTSTARTED:
+    case STATE_NOT_STARTED:
       result="NotStarted";
       break;
     default:
@@ -102,8 +102,8 @@ DroneProcess::State DroneProcess::getState()
 
 void DroneProcess::setState(State new_state)
 {
-  if (new_state==STATE_CREATED || new_state==STATE_READYTOSTART || new_state==STATE_RUNNING || new_state==STATE_PAUSED \
-        || new_state==STATE_STARTED || new_state==STATE_NOTSTARTED)
+  if (new_state==STATE_CREATED || new_state==STATE_READY_TO_START || new_state==STATE_RUNNING || new_state==STATE_PAUSED \
+        || new_state==STATE_STARTED || new_state==STATE_NOT_STARTED)
   {
     current_state = new_state;
     notifyState();
@@ -117,8 +117,8 @@ void DroneProcess::setState(State new_state)
 void DroneProcess::notifyState()
 {
   State _current_state = getState();
-  if (_current_state==STATE_CREATED || _current_state==STATE_READYTOSTART || _current_state==STATE_RUNNING || _current_state==STATE_PAUSED \
-        || _current_state==STATE_STARTED || _current_state==STATE_NOTSTARTED)
+  if (_current_state==STATE_CREATED || _current_state==STATE_READY_TO_START || _current_state==STATE_RUNNING || _current_state==STATE_PAUSED \
+        || _current_state==STATE_STARTED || _current_state==STATE_NOT_STARTED)
   {
     state_message.header.stamp = ros::Time::now();
     state_message.hostname = hostname;
@@ -187,7 +187,7 @@ bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Emp
 
 bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
-  if(current_state==STATE_READYTOSTART)
+  if(current_state==STATE_READY_TO_START)
   {
     start();
     return true;
