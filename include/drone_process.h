@@ -176,20 +176,18 @@ private:
   void threadAlgorithm();
   
   /*!******************************************************************************************************************
-   * \brief This ROS service set DroneProcess in running state.
-   *
-   *        TODO: THIS FUNCTION HAS TO BE REVIEWED 
-   *
+   * \brief This ROS service set DroneProcess in READY_TO_START state and calls function stop. 
+   * \details Currently, this service should only be called if the process is running. In the future
+   * it will also be correct to call this service when the process is paused.
    * \param [in] request 
    * \param [in] response 
    *******************************************************************************************************************/ 
   bool stopServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
   
   /*!******************************************************************************************************************
-   * \brief This ROS service set DroneProcess in sleeping state.
-   *
-   *        TODO: THIS FUNCTION HAS TO BE REVIEWED 
-   *
+   * \brief This ROS service set DroneProcess in RUNNING state and calls function start.
+   * \details Currently, this service should only be called if the process is ready to start. In the future
+   * it will also be correct to call this service when the process is paused or running.
    * \param [in] request 
    * \param [in] response 
    *******************************************************************************************************************/ 
