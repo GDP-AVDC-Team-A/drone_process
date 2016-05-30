@@ -19,7 +19,7 @@
  *     along with this program. If not, see http://www.gnu.org/licenses/. 
  ********************************************************************************/
 
-#include "drone_process.h"
+#include "../include/drone_process.h"
 
 DroneProcess::DroneProcess()
 {

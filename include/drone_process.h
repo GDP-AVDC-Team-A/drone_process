@@ -62,7 +62,7 @@ class DroneProcess
 //variables
 public:
   //! States match the values defined in ProcessState.msg
-  typedef uint8_t State;
+  using State = uint8_t;
 
   //! This enum defines all posible DroneProcess errors that can be sent to the PerformanceMonitor.
   typedef enum
@@ -135,7 +135,7 @@ public:
   void setState(State new_state);
 
   /*!******************************************************************************************************************
-   * \brief Send a DroneProcess.error to the PerformanceMonitor
+   * \brief Send a DroneProcess.error to the Processs Monitor
    * \details This function is a first aproach at error handling. The error comunication between nodes
    * is performed by a two-part message. The first part indicates the type of message we are sending 
    * (info, warning, error) while the second part offers a detailed description of the problem.
