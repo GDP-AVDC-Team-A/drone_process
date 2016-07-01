@@ -110,6 +110,7 @@ void DroneProcess::setState(State new_state)
   }
   else
   {
+    notifyError(SafeguardFatalError, 1, "setState(State new_state)", "New state is invalid");
     ROS_ERROR("In node %s, current state cannot be changed to new state %d",ros::this_node::getName().c_str(),new_state);
   }
 }
@@ -128,6 +129,7 @@ void DroneProcess::notifyState()
   }
   else
   {
+    notifyError(SafeguardFatalError, 1, "notifyState()", "Current state is invalid");
     ROS_ERROR("In node %s, current state is invalid, therefore it is not sent",ros::this_node::getName().c_str());
   }
 }
