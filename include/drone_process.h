@@ -73,7 +73,7 @@ public:
     SafeguardFatalError,
   } Error;
 
-private:
+protected:
 
   pthread_t t1;                     //!< Thread handler.
 
@@ -155,7 +155,7 @@ public:
 
 
 
-private:
+protected:
 
   //!  This function sends an alive message to the PerformanceMonitor indicating the current node state.
   void notifyState();
