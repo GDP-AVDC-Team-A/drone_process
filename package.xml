@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package>
   <name>drone_process</name>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <description>The drone_process package</description>
 
   <author email="e.ortizp@alumnos.upm.es">Enrique Ortiz</author>
   <author email="davidnpalacios@gmail.com">David Palacios</author>
-  <maintainer email="davidnpalacios@gmail.com">David Palacios</maintainer>
+  <maintainer email="alberto.camporredondop@alumnos.upm.es">Alberto Camporredondo</maintainer>
 
   <license>GPLv3</license>
   
