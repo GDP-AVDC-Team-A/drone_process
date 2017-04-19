@@ -55,7 +55,7 @@
  *                  that will be hearing at the 'State' topic.
  *              - Declaration of methods that the derived class will have to implement in order to
  *                  add the desired functionality to the ROS node.
- * 
+ *
  *********************************************************************************************************************/
 class DroneProcess
 {
@@ -74,7 +74,6 @@ public:
   } Error;
 
 protected:
-
   pthread_t t1;                     //!< Thread handler.
 
   ros::NodeHandle node_handler_drone_process;
@@ -82,26 +81,28 @@ protected:
   std::string watchdog_topic;       //!< Attribute storing topic name to send alive messages to the PerformanceMonitor.
   std::string error_topic;          //!< Attribute storing topic name to send errors to the PerformanceMonitor.
 
-  ros::ServiceServer startServerSrv;  //!< ROS service handler used to order a process to start.
-  ros::ServiceServer stopServerSrv;  //!< ROS service handler used to order a process to stop.
+  ros::ServiceServer start_server_srv;  //!< ROS service handler used to order a process to start.
+  ros::ServiceServer stop_server_srv;  //!< ROS service handler used to order a process to stop.
+  ros::ServiceServer is_running_srv;  //!< ROS service handler used to check if a process is in RUNNING state.
 
   ros::Publisher state_pub;            //!< ROS publisher handler used to send state messages.
   ros::Publisher error_pub;            //!< ROS publisher handler used to send error messages.
 
   droneMsgsROS::AliveSignal state_message; //!< Message of type state.
 
-protected:
+protected:                           //!< These attributes are protected because ProcessMonitor uses them.
   State current_state;               //!< Attribute storing current state of the process.
   std::string drone_id;              //!< Attribute storing the drone on which is executing the process.
-  std::string hostname;              //!< Attribute storing the compouter on which the process is executing.
+  std::string hostname;              //!< Attribute storing the computer name on which the process is executing.
+
 
 //methods
 public:
   //! Constructor.
   DroneProcess();
-      
+
   ~DroneProcess();
-    
+
   //!  This function calls to ownSetUp().
   void setUp();
 
@@ -127,7 +128,7 @@ public:
   State getState();
 
   /*!******************************************************************************************************************
-   * \details The function accepts one of the already defined states to modify the 'curent_state' attribute. 
+   * \details The function accepts one of the already defined states to modify the 'curent_state' attribute.
    * It also sends and alive message to the PerformanceMonitor indicating the new state of the node.
    * \param   new_state The new state the process is going to have.
    * \return  The current state of the process.
@@ -137,7 +138,7 @@ public:
   /*!******************************************************************************************************************
    * \brief Send a DroneProcess.error to the Processs Monitor
    * \details This function is a first aproach at error handling. The error comunication between nodes
-   * is performed by a two-part message. The first part indicates the type of message we are sending 
+   * is performed by a two-part message. The first part indicates the type of message we are sending
    * (info, warning, error) while the second part offers a detailed description of the problem.
    * \param [in] type            The type of error we are going to send.
    * \param [in] reference_code  This is a numeric code that may be usefull during error processing.
@@ -153,10 +154,7 @@ public:
    *******************************************************************************************************************/
   std::string stateToString(State state);
 
-
-
 protected:
-
   //!  This function sends an alive message to the PerformanceMonitor indicating the current node state.
   void notifyState();
 
@@ -174,24 +172,24 @@ protected:
 
   //!  This function implements the thread's logic.
   void threadAlgorithm();
-  
+
   /*!******************************************************************************************************************
-   * \brief This ROS service set DroneProcess in READY_TO_START state and calls function stop. 
+   * \brief This ROS service set DroneProcess in READY_TO_START state and calls function stop.
    * \details Currently, this service should only be called if the process is running. In the future
    * it will also be correct to call this service when the process is paused.
-   * \param [in] request 
-   * \param [in] response 
-   *******************************************************************************************************************/ 
-  bool stopServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-  
+   * \param [in] request
+   * \param [in] response
+   *******************************************************************************************************************/
+  bool stopSrvCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
   /*!******************************************************************************************************************
    * \brief This ROS service set DroneProcess in RUNNING state and calls function start.
    * \details Currently, this service should only be called if the process is ready to start. In the future
    * it will also be correct to call this service when the process is paused or running.
-   * \param [in] request 
-   * \param [in] response 
-   *******************************************************************************************************************/ 
-  bool startServCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+   * \param [in] request
+   * \param [in] response
+   *******************************************************************************************************************/
+  bool startSrvCall(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
 protected:
   /*!******************************************************************************************************************
@@ -203,15 +201,15 @@ protected:
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
-   * This function is executed in start(), and it's purpose is to connect to all topics and services. 
-   * Publisher, Subscriber, ServiceServer and ServiceClient definitions should be implemented here. 
+   * This function is executed in start(), and it's purpose is to connect to all topics and services.
+   * Publisher, Subscriber, ServiceServer and ServiceClient definitions should be implemented here.
    *******************************************************************************************************************/
   virtual void ownStart()=0;
 
   /*!******************************************************************************************************************
    * \details All functions starting with 'own' has to be implemented at the derived class.
    * This function is executed in stop(), and it's purpose is to shutdown all topics and services.
-   * Shutdown must be called for every Publisher, Subscriber, ServiceServer and ServiceClient defined in ownStart 
+   * Shutdown must be called for every Publisher, Subscriber, ServiceServer and ServiceClient defined in ownStart
    *******************************************************************************************************************/
   virtual void ownStop()=0;
 
@@ -221,6 +219,5 @@ protected:
    * The user should define this function only when implementing a synchronus execution
    *******************************************************************************************************************/
   virtual void ownRun()=0;
-
 };
 #endif

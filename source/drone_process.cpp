@@ -25,8 +25,8 @@ DroneProcess::DroneProcess()
 {
   watchdog_topic = "process_alive_signal";
   error_topic = "process_error";
-  char buf[32];  
-  gethostname(buf,sizeof buf);  
+  char buf[32];
+  gethostname(buf,sizeof buf);
   hostname.append(buf);
 
   current_state = STATE_CREATED; //This State is not going to be sent. It will we significant in the future when we implement state checks.
@@ -41,9 +41,9 @@ void DroneProcess::setUp()
 {
   state_pub = node_handler_drone_process.advertise<droneMsgsROS::AliveSignal>(watchdog_topic, 10);
   error_pub = node_handler_drone_process.advertise<droneMsgsROS::ProcessError>(error_topic, 10);
-  
-  stopServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopServCall,this);
-  startServerSrv=node_handler_drone_process.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startServCall,this);
+
+  stop_server_srv = node_handler_drone_process.advertiseService(ros::this_node::getName()+"/stop",&DroneProcess::stopSrvCall,this);
+  start_server_srv = node_handler_drone_process.advertiseService(ros::this_node::getName()+"/start",&DroneProcess::startSrvCall,this);
 
   notifyState(); //First state nNotification, the current state is STATE_CREATED
 
@@ -103,7 +103,7 @@ DroneProcess::State DroneProcess::getState()
 void DroneProcess::setState(State new_state)
 {
   if (new_state==STATE_CREATED || new_state==STATE_READY_TO_START || new_state==STATE_RUNNING || new_state==STATE_PAUSED \
-        || new_state==STATE_STARTED || new_state==STATE_NOT_STARTED)
+	|| new_state==STATE_STARTED || new_state==STATE_NOT_STARTED)
   {
     current_state = new_state;
     notifyState();
@@ -119,7 +119,7 @@ void DroneProcess::notifyState()
 {
   State _current_state = getState();
   if (_current_state==STATE_CREATED || _current_state==STATE_READY_TO_START || _current_state==STATE_RUNNING || _current_state==STATE_PAUSED \
-        || _current_state==STATE_STARTED || _current_state==STATE_NOT_STARTED)
+	|| _current_state==STATE_STARTED || _current_state==STATE_NOT_STARTED)
   {
     state_message.header.stamp = ros::Time::now();
     state_message.hostname = hostname;
@@ -173,7 +173,7 @@ void DroneProcess::threadAlgorithm()
   }
 }
 
-bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
+bool DroneProcess::stopSrvCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
   if(current_state==STATE_RUNNING)
   {
@@ -187,7 +187,7 @@ bool DroneProcess::stopServCall(std_srvs::Empty::Request &request, std_srvs::Emp
   }
 }
 
-bool DroneProcess::startServCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
+bool DroneProcess::startSrvCall(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response)
 {
   if(current_state==STATE_READY_TO_START)
   {
